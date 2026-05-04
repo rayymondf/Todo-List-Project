@@ -4,53 +4,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Simple Todo List</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
-
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div id="side-panel">
+    <div class="app">
+        <aside class="sidebar">
+            <h1>Todo List</h1>
 
-        <div id="sidebar-header">
-            <span class="mdi mdi-view-dashboard" aria-hidden="true"></span>
-            <div id="app-title">To Do List</div>
-        </div>
+            <div class="section-heading">
+                <h2>Projects</h2>
+            </div>
 
-        <button id="open-create-todo-btn">Create</button>
+            <form id="project-form" class="project-form">
+                <label class="sr-only" for="project-name">Project name</label>
+                <input id="project-name" name="project-name" type="text" maxlength="30" placeholder="New project" required>
+                <button type="submit" class="form-btn">
+                    <span class="mdi mdi-plus" aria-hidden="true"></span>
+                    <span>Add Project</span>
+                </button>
+            </form>
+
+            <p id="project-error" class="form-message" aria-live="polite"></p>
+            <div id="project-list" class="project-list"></div>
+        </aside>
+
+        <main class="main">
+            <header class="main-header">
+                <div>
+                    <h2 id="current-project-name">Inbox</h2>
+                </div>
+
+                <div class="toolbar">
+                    <label for="sort-mode">Sort</label>
+                    <select id="sort-mode" name="sort-mode">
+                        <option value="default">Newest</option>
+                        <option value="date">Due Date</option>
+                        <option value="priority">Priority</option>
+                        <option value="priority-date">Priority + Date</option>
+                    </select>
+                    <button id="open-todo-modal-btn" type="button" class="primary-btn">
+                        <span class="mdi mdi-plus" aria-hidden="true"></span>
+                        <span>Add Todo</span>
+                    </button>
+                </div>
+            </header>
+
+            <section id="empty-state" class="empty-state">
+                <p>No todos yet. Create one to get started.</p>
+            </section>
+
+            <section id="todo-list" class="todo-list"></section>
+        </main>
     </div>
-    
 
-    <div id = "main">
-        <div class="todo-list"></div>
+    <div id="todo-modal" class="modal-backdrop is-hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="todo-modal-title">Add Todo</h3>
+                <button id="close-todo-modal-btn" type="button" class="close-btn" aria-label="Close">
+                    <span class="mdi mdi-close" aria-hidden="true"></span>
+                </button>
+            </div>
 
-        <div id="create-todo">
-            <form class="todo-card-list">
-                <label for="create-todo-title">Title:</label>
-                <input type="text" name="create-todo-title" id="create-todo-title" maxlength="50">
-                <label for="create-todo-text">Description</label>
-                <input type="text" name="create-todo-text" id="create-todo-text" maxlength="250">
-                <label for="create-todo-time">Time:</label>
-                <input type="date" name="create-todo-time" id="create-todo-time">
-                <button type="button" id="create-todo-btn">Create</button>
+            <form id="todo-form" class="todo-form">
+                <label for="todo-title">Title</label>
+                <input id="todo-title" name="todo-title" type="text" maxlength="50" required>
+
+                <label for="todo-description">Description</label>
+                <textarea id="todo-description" name="todo-description" rows="4" maxlength="250"></textarea>
+
+                <div class="form-row">
+                    <div>
+                        <label for="todo-date">Due Date</label>
+                        <input id="todo-date" name="todo-date" type="date">
+                    </div>
+
+                    <div>
+                        <label for="todo-priority">Priority</label>
+                        <select id="todo-priority" name="todo-priority">
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-actions">
+                    <button id="cancel-todo-btn" type="button">Cancel</button>
+                    <button type="submit" class="primary-btn">Save Todo</button>
+                </div>
             </form>
         </div>
+    </div>
 
-        <div id="edit-todo">
-            <form class="todo-card-list">
-                <label for="edit-todo-title">Title:</label>
-                <input type="text" name="title" id="edit-todo-title" maxlength="50">
-                <label for="edit-todo-text">Description</label>
-                <input type="text" name="edit-todo-text" id="edit-todo-text" maxlength="250">
-                <label for="edit-todo-time">Time:</label>
-                <input type="date" name="edit-todo-time" id="edit-todo-time">
-                <button type="button" id="save-edit-btn">Save</button>
-            </form>
+    <div id="confirm-modal" class="modal-backdrop is-hidden">
+        <div class="modal-card confirm-card">
+            <div class="modal-header">
+                <div>
+                    <p class="section-kicker">Please Confirm</p>
+                    <h3 id="confirm-title">Delete item?</h3>
+                </div>
+                <button id="close-confirm-modal-btn" type="button" class="close-btn" aria-label="Close">
+                    <span class="mdi mdi-close" aria-hidden="true"></span>
+                </button>
+            </div>
+
+            <p id="confirm-message" class="confirm-message">Are you sure you want to delete this item?</p>
+
+            <div class="modal-actions">
+                <button id="cancel-confirm-btn" type="button">Cancel</button>
+                <button id="confirm-action-btn" type="button" class="danger-solid-btn">Delete</button>
+            </div>
         </div>
     </div>
-    
 
-    <link rel="stylesheet" href="styles.css">
     <script src="script.js"></script>
 </body>
 
