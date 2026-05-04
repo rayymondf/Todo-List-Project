@@ -7,12 +7,12 @@
 #app-title{
     outline: 0px;
     font-size: 24px;
-    margin: 10px 20px;
+    margin: 0;
 }
 
 html,body{
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     width: 100%;
     height: 100%;
     margin:0px;
@@ -20,12 +20,29 @@ html,body{
 
 
 }
-#app-header{
+#side-panel{
     display:flex;
-    background: white;
-    width:100%;
-    align-items:center;
+    flex-direction: column;
+
+    gap: 16px;
+    background: lightblue;
+    width: 260px;
+    min-width: 220px;
+    padding: 24px 20px;
+    box-sizing: border-box;
+}
+#sidebar-header{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+#main{
+    display:flex;
+    flex: 1;
+    align-items:flex-start;
     justify-content: center;
+    padding: 24px 0;
+    box-sizing: border-box;
 }
 .todo-list{
     display:flex;
@@ -37,19 +54,42 @@ html,body{
     width:100%;
     min-height: 100vh;
 }
-button{
+#open-create-todo-btn{
+    height:60px;
+    width: 80%;
     border-radius:5px;
-    padding: 10px 20px;
-    margin: 10px 20px;
+    padding: 5px 15px;
+    margin: 0;
+    
 }
-input,
-textarea{
+#create-todo-btn,#save-edit-btn{
+    height:60px;
+    width: 50%;
+    border-radius:5px;
+    padding: 5px 15px;
+    margin: 50px 5px 5px 5px;
+    align-self: center;
+}
+.delete{
+    height:40px;
+    width: 100px;
+    border-radius:5px;
+    margin: 10px 10px;
+}
+.delete:hover{
+    background:lightcoral;
+}
+button{
+    background:white;
+}
+button:hover{
+    background:lightgrey;
+
+}
+input{
     outline:0px;
     padding: 10px 20px;
     margin: 10px 20px;
-    border: 1px solid #999;
-    border-radius: 6px;
-    resize: vertical;
 }
 #create-todo,
 #edit-todo {
@@ -62,7 +102,7 @@ textarea{
     z-index: 1000;
 }
 
-.todo-card-modal {
+.todo-card-list {
     background: white;
     width: min(380px, calc(100vw - 32px));
     min-height: 200px;
@@ -76,67 +116,10 @@ label{
     display: block;
     width: 100%;
 }
-.field-hint{
-    margin: -4px 20px 6px;
-    color: #666;
-    font-size: 12px;
+.mdi-view-dashboard{
+    font-size: 32px;
 }
-.card{
-    width: 95%;
-    margin: 10px 20px;
-    padding: 15px;
-    outline: 1px solid black;
-    border-radius: 10px;
-    cursor: pointer;
-    background: white;
-    box-sizing: border-box;
-}
-.card-main{
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-.card-top-row{
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 12px;
-}
-.card-meta{
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    min-width: 0;
-}
-.card-title{
-    font-size: 18px;
-    font-weight: 700;
-    overflow-wrap: anywhere;
-}
-.card-time{
-    color: #555;
-    font-size: 14px;
-}
-.card-preview,
-.card-description{
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-}
-.card-description{
-    display: none;
-    border-top: 1px solid #ddd;
-    padding-top: 8px;
-}
-.card[data-expanded="true"] .card-description{
-    display: block;
-}
-.card[data-expanded="true"] .card-preview{
-    display: none;
-}
-.card-actions{
-    display: flex;
-    flex-shrink: 0;
-}
+
 .card:hover{
     background:lightgrey;
 }
