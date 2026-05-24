@@ -4,119 +4,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Todo List</title>
+    <title>Todo</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@mdi/font@7.4.47/css/materialdesignicons.min.css">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
     <div class="app">
-        <aside class="sidebar">
-            <h1>Todo List</h1>
-
-            <div class="section-heading">
-                <h2>Projects</h2>
-            </div>
-
-            <form id="project-form" class="project-form">
-                <label class="sr-only" for="project-name">Project name</label>
-                <input id="project-name" name="project-name" type="text" maxlength="30" placeholder="New project" required>
-                <button type="submit" class="form-btn">
-                    <span class="mdi mdi-plus" aria-hidden="true"></span>
-                    <span>Add Project</span>
-                </button>
-            </form>
-
-            <p id="project-error" class="form-message" aria-live="polite"></p>
-            <div id="project-list" class="project-list"></div>
-        </aside>
-
-        <main class="main">
-            <header class="main-header">
-                <div>
-                    <h2 id="current-project-name">Inbox</h2>
+        <header class="app-header">
+            <span class="app-logo">
+                <span class="mdi mdi-check-circle-outline" aria-hidden="true"></span>
+                Todo
+            </span>
+            <div class="header-actions">
+                <div class="search-wrap">
+                    <span class="mdi mdi-magnify search-icon" aria-hidden="true"></span>
+                    <input id="search-input" type="search" placeholder="Search todos…" aria-label="Search todos">
                 </div>
-
-                <div class="toolbar">
-                    <label for="sort-mode">Sort</label>
-                    <select id="sort-mode" name="sort-mode">
-                        <option value="default">Newest</option>
-                        <option value="date">Due Date</option>
-                        <option value="priority">Priority</option>
-                        <option value="priority-date">Priority + Date</option>
-                    </select>
-                    <button id="open-todo-modal-btn" type="button" class="primary-btn">
-                        <span class="mdi mdi-plus" aria-hidden="true"></span>
-                        <span>Add Todo</span>
+                <div class="view-toggle" role="group" aria-label="View mode">
+                    <button id="view-calendar-btn" class="view-btn active" aria-pressed="true" title="Calendar view">
+                        <span class="mdi mdi-calendar-month-outline" aria-hidden="true"></span>
+                    </button>
+                    <button id="view-list-btn" class="view-btn" aria-pressed="false" title="List view">
+                        <span class="mdi mdi-format-list-bulleted" aria-hidden="true"></span>
                     </button>
                 </div>
-            </header>
+                <button id="open-todo-modal-btn" class="primary-btn">
+                    <span class="mdi mdi-plus" aria-hidden="true"></span>
+                    Add Todo
+                </button>
+            </div>
+        </header>
 
-            <section id="empty-state" class="empty-state">
-                <p>No todos yet. Create one to get started.</p>
+        <main class="main">
+            <!-- CALENDAR VIEW -->
+            <section id="calendar-view" class="view">
+                <div class="calendar-nav">
+                    <button id="cal-prev-btn" class="icon-btn" aria-label="Previous month">
+                        <span class="mdi mdi-chevron-left" aria-hidden="true"></span>
+                    </button>
+                    <h2 id="cal-heading" class="cal-heading"></h2>
+                    <button id="cal-next-btn" class="icon-btn" aria-label="Next month">
+                        <span class="mdi mdi-chevron-right" aria-hidden="true"></span>
+                    </button>
+                    <button id="cal-today-btn" class="ghost-btn">Today</button>
+                </div>
+                <div class="calendar-grid" id="calendar-grid" role="grid" aria-label="Calendar"></div>
             </section>
 
-            <section id="todo-list" class="todo-list"></section>
+            <!-- LIST VIEW -->
+            <section id="list-view" class="view is-hidden">
+                <div class="list-toolbar">
+                    <div class="filter-group">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="active">Active</button>
+                        <button class="filter-btn" data-filter="completed">Completed</button>
+                        <button class="filter-btn" data-filter="overdue">Overdue</button>
+                    </div>
+                    <div class="sort-group">
+                        <label for="sort-mode" class="sr-only">Sort by</label>
+                        <select id="sort-mode">
+                            <option value="default">Newest first</option>
+                            <option value="date">Due date</option>
+                            <option value="priority">Priority</option>
+                            <option value="az">A → Z</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="tag-filter-bar" class="tag-filter-bar"></div>
+
+                <div id="empty-state" class="empty-state is-hidden">
+                    <span class="mdi mdi-clipboard-check-outline empty-icon" aria-hidden="true"></span>
+                    <p>Nothing here yet.</p>
+                </div>
+
+                <ul id="todo-list" class="todo-list" role="list"></ul>
+            </section>
         </main>
     </div>
 
-    <div id="todo-modal" class="modal-backdrop is-hidden">
+    <!-- TODO MODAL -->
+    <div id="todo-modal" class="modal-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="todo-modal-title">
         <div class="modal-card">
             <div class="modal-header">
                 <h3 id="todo-modal-title">Add Todo</h3>
-                <button id="close-todo-modal-btn" type="button" class="close-btn" aria-label="Close">
+                <button id="close-todo-modal-btn" class="close-btn" aria-label="Close">
                     <span class="mdi mdi-close" aria-hidden="true"></span>
                 </button>
             </div>
-
-            <form id="todo-form" class="todo-form">
-                <label for="todo-title">Title</label>
-                <input id="todo-title" name="todo-title" type="text" maxlength="50" required>
+            <form id="todo-form" class="todo-form" novalidate>
+                <label for="todo-title">Title <span aria-hidden="true">*</span></label>
+                <input id="todo-title" name="todo-title" type="text" maxlength="80" required autocomplete="off">
 
                 <label for="todo-description">Description</label>
-                <textarea id="todo-description" name="todo-description" rows="4" maxlength="250"></textarea>
+                <textarea id="todo-description" name="todo-description" rows="3" maxlength="500"></textarea>
 
                 <div class="form-row">
-                    <div>
+                    <div class="form-field">
                         <label for="todo-date">Due Date</label>
                         <input id="todo-date" name="todo-date" type="date">
                     </div>
-
-                    <div>
+                    <div class="form-field">
                         <label for="todo-priority">Priority</label>
                         <select id="todo-priority" name="todo-priority">
                             <option value="low">Low</option>
-                            <option value="medium">Medium</option>
+                            <option value="medium" selected>Medium</option>
                             <option value="high">High</option>
                         </select>
                     </div>
                 </div>
 
+                <div class="form-field">
+                    <label for="todo-tags">Tags <span class="label-hint">(comma-separated)</span></label>
+                    <input id="todo-tags" name="todo-tags" type="text" placeholder="work, personal, urgent…" autocomplete="off">
+                </div>
+
+                <div class="form-field">
+                    <label for="todo-repeat">Repeat</label>
+                    <select id="todo-repeat" name="todo-repeat">
+                        <option value="none">None</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                </div>
+
+                <p id="todo-form-error" class="form-error" aria-live="polite"></p>
+
                 <div class="modal-actions">
-                    <button id="cancel-todo-btn" type="button">Cancel</button>
-                    <button type="submit" class="primary-btn">Save Todo</button>
+                    <button id="cancel-todo-btn" type="button" class="ghost-btn">Cancel</button>
+                    <button type="submit" class="primary-btn">Save</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <div id="confirm-modal" class="modal-backdrop is-hidden">
-        <div class="modal-card confirm-card">
+    <!-- DAY DETAIL MODAL (calendar day click) -->
+    <div id="day-modal" class="modal-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="day-modal-title">
+        <div class="modal-card">
             <div class="modal-header">
-                <div>
-                    <p class="section-kicker">Please Confirm</p>
-                    <h3 id="confirm-title">Delete item?</h3>
-                </div>
-                <button id="close-confirm-modal-btn" type="button" class="close-btn" aria-label="Close">
+                <h3 id="day-modal-title"></h3>
+                <button id="close-day-modal-btn" class="close-btn" aria-label="Close">
                     <span class="mdi mdi-close" aria-hidden="true"></span>
                 </button>
             </div>
-
-            <p id="confirm-message" class="confirm-message">Are you sure you want to delete this item?</p>
-
+            <ul id="day-todo-list" class="day-todo-list" role="list"></ul>
             <div class="modal-actions">
-                <button id="cancel-confirm-btn" type="button">Cancel</button>
-                <button id="confirm-action-btn" type="button" class="danger-solid-btn">Delete</button>
+                <button id="add-todo-on-day-btn" class="primary-btn">
+                    <span class="mdi mdi-plus" aria-hidden="true"></span>
+                    Add Todo
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM MODAL -->
+    <div id="confirm-modal" class="modal-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+        <div class="modal-card confirm-card">
+            <div class="modal-header">
+                <h3 id="confirm-title">Delete todo?</h3>
+                <button id="close-confirm-modal-btn" class="close-btn" aria-label="Close">
+                    <span class="mdi mdi-close" aria-hidden="true"></span>
+                </button>
+            </div>
+            <p id="confirm-message" class="confirm-message"></p>
+            <div class="modal-actions">
+                <button id="cancel-confirm-btn" class="ghost-btn">Cancel</button>
+                <button id="confirm-action-btn" class="danger-btn">Delete</button>
             </div>
         </div>
     </div>
