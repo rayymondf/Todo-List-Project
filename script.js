@@ -3,40 +3,35 @@
 const TodoModel = (() => {
     const PRIORITY_ORDER = { high: 0, medium: 1, low: 2 };
     const VALID_PRIORITIES = ["low", "medium", "high"];
-    const VALID_REPEATS = ["none", "daily", "weekly", "monthly"];
-    const VALID_SORTS = ["default", "date", "priority", "az"];
-    const VALID_FILTERS = ["all", "active", "completed", "overdue"];
+    const VALID_REPEATS    = ["none", "daily", "weekly", "monthly"];
+    const VALID_SORTS      = ["default", "date", "priority", "az"];
+    const VALID_FILTERS    = ["all", "active", "completed", "overdue"];
 
     function createId() {
         return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
     }
 
-    function normalizePriority(v) {
-        return VALID_PRIORITIES.includes(v) ? v : "medium";
-    }
-
-    function normalizeRepeat(v) {
-        return VALID_REPEATS.includes(v) ? v : "none";
-    }
+    function normalizePriority(v) { return VALID_PRIORITIES.includes(v) ? v : "medium"; }
+    function normalizeRepeat(v)   { return VALID_REPEATS.includes(v)    ? v : "none"; }
 
     function parseTags(raw) {
-        if (Array.isArray(raw)) return raw.map(t => String(t).trim()).filter(Boolean);
+        if (Array.isArray(raw))    return raw.map(t => String(t).trim()).filter(Boolean);
         if (typeof raw === "string") return raw.split(",").map(t => t.trim()).filter(Boolean);
         return [];
     }
 
     function createTodo(data = {}) {
         return {
-            id: data.id || createId(),
-            title: (String(data.title || "")).trim() || "Untitled",
+            id:          data.id || createId(),
+            title:       (String(data.title || "")).trim() || "Untitled",
             description: String(data.description || "").trim(),
-            dueDate: data.dueDate || "",
-            priority: normalizePriority(data.priority),
-            tags: parseTags(data.tags),
-            repeat: normalizeRepeat(data.repeat),
-            completed: Boolean(data.completed),
+            dueDate:     data.dueDate || "",
+            priority:    normalizePriority(data.priority),
+            tags:        parseTags(data.tags),
+            repeat:      normalizeRepeat(data.repeat),
+            completed:   Boolean(data.completed),
             completedAt: data.completedAt || null,
-            createdAt: typeof data.createdAt === "number" ? data.createdAt : Date.now()
+            createdAt:   typeof data.createdAt === "number" ? data.createdAt : Date.now()
         };
     }
 
@@ -47,16 +42,14 @@ const TodoModel = (() => {
     function normalizeState(raw) {
         if (!raw || !Array.isArray(raw.todos)) return createInitialState();
         return {
-            todos: raw.todos.map(createTodo),
-            sortMode: VALID_SORTS.includes(raw.sortMode) ? raw.sortMode : "default",
-            filterMode: VALID_FILTERS.includes(raw.filterMode) ? raw.filterMode : "all",
+            todos:       raw.todos.map(createTodo),
+            sortMode:    VALID_SORTS.includes(raw.sortMode)     ? raw.sortMode    : "default",
+            filterMode:  VALID_FILTERS.includes(raw.filterMode) ? raw.filterMode  : "all",
             searchQuery: ""
         };
     }
 
-    function getTodoById(state, id) {
-        return state.todos.find(t => t.id === id) || null;
-    }
+    function getTodoById(state, id) { return state.todos.find(t => t.id === id) || null; }
 
     function addTodo(state, data) {
         const todo = createTodo(data);
@@ -67,19 +60,19 @@ const TodoModel = (() => {
     function updateTodo(state, id, data) {
         const todo = getTodoById(state, id);
         if (!todo) return null;
-        todo.title = (String(data.title || "")).trim() || todo.title;
+        todo.title       = (String(data.title || "")).trim() || todo.title;
         todo.description = String(data.description || "").trim();
-        todo.dueDate = data.dueDate || "";
-        todo.priority = normalizePriority(data.priority);
-        todo.tags = parseTags(data.tags);
-        todo.repeat = normalizeRepeat(data.repeat);
+        todo.dueDate     = data.dueDate || "";
+        todo.priority    = normalizePriority(data.priority);
+        todo.tags        = parseTags(data.tags);
+        todo.repeat      = normalizeRepeat(data.repeat);
         return todo;
     }
 
     function toggleTodo(state, id) {
         const todo = getTodoById(state, id);
         if (!todo) return false;
-        todo.completed = !todo.completed;
+        todo.completed  = !todo.completed;
         todo.completedAt = todo.completed ? Date.now() : null;
         return true;
     }
@@ -90,42 +83,42 @@ const TodoModel = (() => {
         return state.todos.length !== before;
     }
 
-    function isOverdue(todo) {
-        if (!todo.dueDate || todo.completed) return false;
-        return todo.dueDate < todayString();
-    }
-
     function todayString() {
         const d = new Date();
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     }
 
+    function isOverdue(todo) {
+        if (!todo.dueDate || todo.completed) return false;
+        return todo.dueDate < todayString();
+    }
+
     function filterTodos(todos, filterMode, searchQuery) {
         const q = (searchQuery || "").toLowerCase().trim();
         return todos.filter(todo => {
-            if (filterMode === "active" && todo.completed) return false;
-            if (filterMode === "completed" && !todo.completed) return false;
-            if (filterMode === "overdue" && !isOverdue(todo)) return false;
+            if (filterMode === "active"    && todo.completed)   return false;
+            if (filterMode === "completed" && !todo.completed)  return false;
+            if (filterMode === "overdue"   && !isOverdue(todo)) return false;
             if (q) {
-                const haystack = `${todo.title} ${todo.description} ${todo.tags.join(" ")}`.toLowerCase();
-                if (!haystack.includes(q)) return false;
+                const hay = `${todo.title} ${todo.description} ${todo.tags.join(" ")}`.toLowerCase();
+                if (!hay.includes(q)) return false;
             }
             return true;
         });
     }
 
     function filterByTag(todos, tag) {
-        if (!tag) return todos;
-        return todos.filter(t => t.tags.includes(tag));
+        return tag ? todos.filter(t => t.tags.includes(tag)) : todos;
     }
 
     function sortTodos(todos, sortMode) {
         return todos.slice().sort((a, b) => {
+            // completed items always sink to the bottom
             if (a.completed !== b.completed) return Number(a.completed) - Number(b.completed);
-            if (sortMode === "date") return cmpDate(a, b) || cmpCreated(b, a);
+            if (sortMode === "date")     return cmpDate(a, b)     || cmpCreated(b, a);
             if (sortMode === "priority") return cmpPriority(a, b) || cmpCreated(b, a);
-            if (sortMode === "az") return a.title.localeCompare(b.title);
-            return cmpCreated(b, a);
+            if (sortMode === "az")       return a.title.localeCompare(b.title);
+            return cmpCreated(b, a); // default: newest first
         });
     }
 
@@ -136,13 +129,8 @@ const TodoModel = (() => {
         return a.dueDate.localeCompare(b.dueDate);
     }
 
-    function cmpPriority(a, b) {
-        return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority];
-    }
-
-    function cmpCreated(a, b) {
-        return a.createdAt - b.createdAt;
-    }
+    function cmpPriority(a, b) { return PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]; }
+    function cmpCreated(a, b)  { return a.createdAt - b.createdAt; }
 
     function getAllTags(state) {
         const set = new Set();
@@ -187,67 +175,69 @@ const Storage = (() => {
     return { load, save };
 })();
 
-
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 const App = (() => {
-    // DOM refs
     const el = {
-        searchInput: document.querySelector("#search-input"),
-        viewCalBtn: document.querySelector("#view-calendar-btn"),
-        viewListBtn: document.querySelector("#view-list-btn"),
-        calendarView: document.querySelector("#calendar-view"),
-        listView: document.querySelector("#list-view"),
-        calPrev: document.querySelector("#cal-prev-btn"),
-        calNext: document.querySelector("#cal-next-btn"),
-        calToday: document.querySelector("#cal-today-btn"),
-        calHeading: document.querySelector("#cal-heading"),
-        calGrid: document.querySelector("#calendar-grid"),
-        filterBtns: document.querySelectorAll(".filter-btn"),
-        sortMode: document.querySelector("#sort-mode"),
-        tagFilterBar: document.querySelector("#tag-filter-bar"),
-        emptyState: document.querySelector("#empty-state"),
-        todoList: document.querySelector("#todo-list"),
+        searchInput:     document.querySelector("#search-input"),
+        viewCalBtn:      document.querySelector("#view-calendar-btn"),
+        viewListBtn:     document.querySelector("#view-list-btn"),
+        calendarView:    document.querySelector("#calendar-view"),
+        listView:        document.querySelector("#list-view"),
+        calPrev:         document.querySelector("#cal-prev-btn"),
+        calNext:         document.querySelector("#cal-next-btn"),
+        calToday:        document.querySelector("#cal-today-btn"),
+        calHeading:      document.querySelector("#cal-heading"),
+        calGrid:         document.querySelector("#calendar-grid"),
+        filterBtns:      document.querySelectorAll(".filter-btn"),
+        sortMode:        document.querySelector("#sort-mode"),
+        tagFilterBar:    document.querySelector("#tag-filter-bar"),
+        emptyState:      document.querySelector("#empty-state"),
+        todoList:        document.querySelector("#todo-list"),
         // todo modal
-        todoModal: document.querySelector("#todo-modal"),
-        todoModalTitle: document.querySelector("#todo-modal-title"),
-        closeTodoModal: document.querySelector("#close-todo-modal-btn"),
-        cancelTodoBtn: document.querySelector("#cancel-todo-btn"),
-        todoForm: document.querySelector("#todo-form"),
-        todoTitle: document.querySelector("#todo-title"),
-        todoDesc: document.querySelector("#todo-description"),
-        todoDate: document.querySelector("#todo-date"),
-        todoPriority: document.querySelector("#todo-priority"),
-        todoTags: document.querySelector("#todo-tags"),
-        todoRepeat: document.querySelector("#todo-repeat"),
-        todoFormError: document.querySelector("#todo-form-error"),
+        todoModal:       document.querySelector("#todo-modal"),
+        todoModalTitle:  document.querySelector("#todo-modal-title"),
+        closeTodoModal:  document.querySelector("#close-todo-modal-btn"),
+        cancelTodoBtn:   document.querySelector("#cancel-todo-btn"),
+        todoForm:        document.querySelector("#todo-form"),
+        todoTitle:       document.querySelector("#todo-title"),
+        todoDesc:        document.querySelector("#todo-description"),
+        todoDate:        document.querySelector("#todo-date"),
+        todoPriority:    document.querySelector("#todo-priority"),
+        todoTags:        document.querySelector("#todo-tags"),
+        todoRepeat:      document.querySelector("#todo-repeat"),
+        todoFormError:   document.querySelector("#todo-form-error"),
         // day modal
-        dayModal: document.querySelector("#day-modal"),
-        dayModalTitle: document.querySelector("#day-modal-title"),
-        closeDayModal: document.querySelector("#close-day-modal-btn"),
-        dayTodoList: document.querySelector("#day-todo-list"),
+        dayModal:        document.querySelector("#day-modal"),
+        dayModalTitle:   document.querySelector("#day-modal-title"),
+        closeDayModal:   document.querySelector("#close-day-modal-btn"),
+        dayTodoList:     document.querySelector("#day-todo-list"),
         addTodoOnDayBtn: document.querySelector("#add-todo-on-day-btn"),
         // confirm modal
-        confirmModal: document.querySelector("#confirm-modal"),
-        confirmTitle: document.querySelector("#confirm-title"),
-        confirmMessage: document.querySelector("#confirm-message"),
-        closeConfirmModal: document.querySelector("#close-confirm-modal-btn"),
-        cancelConfirmBtn: document.querySelector("#cancel-confirm-btn"),
-        confirmActionBtn: document.querySelector("#confirm-action-btn"),
-        openTodoModalBtn: document.querySelector("#open-todo-modal-btn")
+        confirmModal:       document.querySelector("#confirm-modal"),
+        confirmTitle:       document.querySelector("#confirm-title"),
+        confirmMessage:     document.querySelector("#confirm-message"),
+        closeConfirmModal:  document.querySelector("#close-confirm-modal-btn"),
+        cancelConfirmBtn:   document.querySelector("#cancel-confirm-btn"),
+        confirmActionBtn:   document.querySelector("#confirm-action-btn"),
+        openTodoModalBtn:   document.querySelector("#open-todo-modal-btn")
     };
 
-    let state = Storage.load();
-    let currentView = "calendar";
+    let state        = Storage.load();
+    let currentView  = "calendar";
     let calYear, calMonth;
-    let editingId = null;
-    let pendingDayDate = null;
-    let pendingConfirm = null;
-    let activeTag = null;
+    let editingId    = null;
+    // tracks whether the todo modal was opened from inside the day modal
+    let editFromDay  = false;
+    let pendingDayDate  = null;
+    let pendingConfirm  = null;
+    let activeTag       = null;
+
+    // ── Init ──────────────────────────────────────────────────────────────────
 
     function init() {
         const now = new Date();
-        calYear = now.getFullYear();
+        calYear  = now.getFullYear();
         calMonth = now.getMonth();
         bindEvents();
         render();
@@ -257,37 +247,44 @@ const App = (() => {
 
     function bindEvents() {
         el.openTodoModalBtn.addEventListener("click", () => openTodoModal());
-        el.viewCalBtn.addEventListener("click", () => switchView("calendar"));
+        el.viewCalBtn.addEventListener("click",  () => switchView("calendar"));
         el.viewListBtn.addEventListener("click", () => switchView("list"));
+
         el.calPrev.addEventListener("click", () => { stepMonth(-1); renderCalendar(); });
-        el.calNext.addEventListener("click", () => { stepMonth(1); renderCalendar(); });
+        el.calNext.addEventListener("click", () => { stepMonth(1);  renderCalendar(); });
         el.calToday.addEventListener("click", () => {
             const now = new Date();
-            calYear = now.getFullYear();
+            calYear  = now.getFullYear();
             calMonth = now.getMonth();
             renderCalendar();
         });
+
         el.searchInput.addEventListener("input", () => {
             state.searchQuery = el.searchInput.value;
             renderList();
         });
+
         el.filterBtns.forEach(btn => btn.addEventListener("click", () => {
             state.filterMode = btn.dataset.filter;
             el.filterBtns.forEach(b => b.classList.toggle("active", b === btn));
             Storage.save(state);
             renderList();
         }));
+
         el.sortMode.addEventListener("change", () => {
             state.sortMode = el.sortMode.value;
             Storage.save(state);
             renderList();
         });
+
         el.todoList.addEventListener("click", handleListClick);
+
         // todo modal
-        el.closeTodoModal.addEventListener("click", closeTodoModal);
-        el.cancelTodoBtn.addEventListener("click", closeTodoModal);
-        el.todoModal.addEventListener("click", e => { if (e.target === el.todoModal) closeTodoModal(); });
+        el.closeTodoModal.addEventListener("click", cancelTodoModal);
+        el.cancelTodoBtn.addEventListener("click",  cancelTodoModal);
+        el.todoModal.addEventListener("click", e => { if (e.target === el.todoModal) cancelTodoModal(); });
         el.todoForm.addEventListener("submit", handleTodoSubmit);
+
         // day modal
         el.closeDayModal.addEventListener("click", closeDayModal);
         el.dayModal.addEventListener("click", e => { if (e.target === el.dayModal) closeDayModal(); });
@@ -297,28 +294,29 @@ const App = (() => {
             openTodoModal(null, date);
         });
         el.dayTodoList.addEventListener("click", handleDayListClick);
+
         // confirm modal
         el.closeConfirmModal.addEventListener("click", closeConfirmModal);
-        el.cancelConfirmBtn.addEventListener("click", closeConfirmModal);
+        el.cancelConfirmBtn.addEventListener("click",  closeConfirmModal);
         el.confirmModal.addEventListener("click", e => { if (e.target === el.confirmModal) closeConfirmModal(); });
         el.confirmActionBtn.addEventListener("click", () => {
             if (typeof pendingConfirm === "function") pendingConfirm();
             closeConfirmModal();
         });
+
         document.addEventListener("keydown", e => {
             if (e.key !== "Escape") return;
             if (!el.confirmModal.classList.contains("is-hidden")) { closeConfirmModal(); return; }
-            if (!el.dayModal.classList.contains("is-hidden")) { closeDayModal(); return; }
-            if (!el.todoModal.classList.contains("is-hidden")) { closeTodoModal(); return; }
+            if (!el.dayModal.classList.contains("is-hidden"))     { closeDayModal();     return; }
+            if (!el.todoModal.classList.contains("is-hidden"))    { cancelTodoModal();   return; }
         });
     }
 
     function stepMonth(delta) {
         calMonth += delta;
         if (calMonth > 11) { calMonth = 0; calYear++; }
-        if (calMonth < 0) { calMonth = 11; calYear--; }
+        if (calMonth < 0)  { calMonth = 11; calYear--; }
     }
-
 
     // ── Modal helpers ─────────────────────────────────────────────────────────
 
@@ -329,12 +327,12 @@ const App = (() => {
         el.todoFormError.textContent = "";
         el.todoPriority.value = "medium";
         if (todo) {
-            el.todoTitle.value = todo.title;
-            el.todoDesc.value = todo.description;
-            el.todoDate.value = todo.dueDate;
+            el.todoTitle.value    = todo.title;
+            el.todoDesc.value     = todo.description;
+            el.todoDate.value     = todo.dueDate;
             el.todoPriority.value = todo.priority;
-            el.todoTags.value = todo.tags.join(", ");
-            el.todoRepeat.value = todo.repeat;
+            el.todoTags.value     = todo.tags.join(", ");
+            el.todoRepeat.value   = todo.repeat;
         } else if (prefillDate) {
             el.todoDate.value = prefillDate;
         }
@@ -342,27 +340,34 @@ const App = (() => {
         el.todoTitle.focus();
     }
 
-    function closeTodoModal() {
-        editingId = null;
+    // Cancel — if we came from the day modal, re-open it
+    function cancelTodoModal() {
+        const returnDate = editFromDay ? pendingDayDate : null;
+        editingId   = null;
+        editFromDay = false;
         hideModal(el.todoModal);
+        if (returnDate) openDayModal(returnDate);
     }
 
     function openDayModal(dateString) {
         pendingDayDate = dateString;
         const d = new Date(`${dateString}T00:00:00`);
-        el.dayModalTitle.textContent = d.toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+        el.dayModalTitle.textContent = d.toLocaleDateString(undefined, {
+            weekday: "long", month: "long", day: "numeric", year: "numeric"
+        });
         renderDayList(dateString);
         showModal(el.dayModal);
     }
 
     function closeDayModal() {
         pendingDayDate = null;
+        editFromDay    = false;
         hideModal(el.dayModal);
     }
 
     function openConfirmModal({ title, message, onConfirm }) {
         pendingConfirm = onConfirm;
-        el.confirmTitle.textContent = title;
+        el.confirmTitle.textContent   = title;
         el.confirmMessage.textContent = message;
         showModal(el.confirmModal);
         el.confirmActionBtn.focus();
@@ -380,7 +385,8 @@ const App = (() => {
 
     function hideModal(modal) {
         modal.classList.add("is-hidden");
-        const anyOpen = [el.todoModal, el.dayModal, el.confirmModal].some(m => !m.classList.contains("is-hidden"));
+        const anyOpen = [el.todoModal, el.dayModal, el.confirmModal]
+            .some(m => !m.classList.contains("is-hidden"));
         if (!anyOpen) document.body.classList.remove("modal-open");
     }
 
@@ -395,31 +401,42 @@ const App = (() => {
             return;
         }
         el.todoFormError.textContent = "";
+
         const data = {
             title,
             description: el.todoDesc.value,
-            dueDate: el.todoDate.value,
-            priority: el.todoPriority.value,
-            tags: el.todoTags.value,
-            repeat: el.todoRepeat.value
+            dueDate:     el.todoDate.value,
+            priority:    el.todoPriority.value,
+            tags:        el.todoTags.value,
+            repeat:      el.todoRepeat.value
         };
+
         if (editingId) {
             TodoModel.updateTodo(state, editingId, data);
         } else {
             TodoModel.addTodo(state, data);
         }
         Storage.save(state);
-        closeTodoModal();
-        render();
+
+        // If the todo form was opened from the day modal, go back to it
+        const returnDate = editFromDay ? pendingDayDate : null;
+        editingId   = null;
+        editFromDay = false;
+        hideModal(el.todoModal);
+
+        renderCalendar(); // always keep calendar fresh
+        if (currentView === "list") renderList();
+
+        if (returnDate) openDayModal(returnDate);
     }
 
-    // ── List click handler ────────────────────────────────────────────────────
+    // ── List click handlers ───────────────────────────────────────────────────
 
     function handleListClick(e) {
         const btn = e.target.closest("[data-action]");
         if (!btn) return;
         e.stopPropagation();
-        dispatchTodoAction(btn.dataset.action, btn.dataset.id);
+        dispatchTodoAction(btn.dataset.action, btn.dataset.id, false);
     }
 
     function handleDayListClick(e) {
@@ -429,46 +446,75 @@ const App = (() => {
         dispatchTodoAction(btn.dataset.action, btn.dataset.id, true);
     }
 
-    function dispatchTodoAction(action, id, fromDay = false) {
+    function dispatchTodoAction(action, id, fromDay) {
         const todo = TodoModel.getTodoById(state, id);
         if (!todo) return;
+
         if (action === "toggle") {
             TodoModel.toggleTodo(state, id);
             Storage.save(state);
-            render();
+            // Refresh calendar and list without disturbing open modals
+            renderCalendar();
+            if (currentView === "list") renderList();
             if (fromDay && pendingDayDate) renderDayList(pendingDayDate);
+
         } else if (action === "edit") {
-            if (fromDay) closeDayModal();
+            if (fromDay) {
+                // Keep pendingDayDate alive so we can return after save/cancel
+                editFromDay = true;
+                hideDayModalOnly();
+            }
             openTodoModal(todo);
+
         } else if (action === "delete") {
             openConfirmModal({
-                title: "Delete todo?",
+                title:   "Delete todo?",
                 message: `"${todo.title}" will be permanently deleted.`,
                 onConfirm() {
+                    const dateToReturn = fromDay ? pendingDayDate : null;
                     TodoModel.deleteTodo(state, id);
                     Storage.save(state);
-                    render();
-                    if (fromDay && pendingDayDate) renderDayList(pendingDayDate);
+                    renderCalendar();
+                    if (currentView === "list") renderList();
+                    // If deleting from day modal, re-render or close if now empty
+                    if (dateToReturn) {
+                        const remaining = TodoModel.getTodosForDate(state, dateToReturn);
+                        if (remaining.length > 0) {
+                            renderDayList(dateToReturn);
+                        }
+                        // if no todos remain the day modal is already closed by closeConfirmModal flow
+                        // but the modal is still open — re-render the empty state inside it
+                        else {
+                            renderDayList(dateToReturn);
+                        }
+                    }
                 }
             });
         }
     }
 
+    // Hide the day modal overlay without clearing pendingDayDate
+    function hideDayModalOnly() {
+        el.dayModal.classList.add("is-hidden");
+        const anyOpen = [el.todoModal, el.confirmModal]
+            .some(m => !m.classList.contains("is-hidden"));
+        if (!anyOpen) document.body.classList.remove("modal-open");
+    }
 
     // ── Render ────────────────────────────────────────────────────────────────
 
     function render() {
-        if (currentView === "calendar") renderCalendar();
-        else renderList();
+        renderCalendar();
+        if (currentView === "list") renderList();
     }
 
     function switchView(view) {
         currentView = view;
         el.calendarView.classList.toggle("is-hidden", view !== "calendar");
-        el.listView.classList.toggle("is-hidden", view !== "list");
-        el.viewCalBtn.classList.toggle("active", view === "calendar");
+        el.listView.classList.toggle("is-hidden",     view !== "list");
+        el.viewCalBtn.classList.toggle("active",  view === "calendar");
         el.viewListBtn.classList.toggle("active", view === "list");
-        el.viewCalBtn.setAttribute("aria-pressed", String(view === "calendar"));
+        el.viewCalBtn.setAttribute("aria-pressed",  String(view === "calendar"));
         el.viewListBtn.setAttribute("aria-pressed", String(view === "list"));
         render();
     }
@@ -476,23 +522,24 @@ const App = (() => {
     // ── Calendar ──────────────────────────────────────────────────────────────
 
     function renderCalendar() {
-        const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-        const today = TodoModel.todayString();
-        const firstDay = new Date(calYear, calMonth, 1).getDay();
+        const DAYS       = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+        const today      = TodoModel.todayString();
+        const firstDay   = new Date(calYear, calMonth, 1).getDay();
         const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
 
-        el.calHeading.textContent = new Date(calYear, calMonth).toLocaleDateString(undefined, { month: "long", year: "numeric" });
+        el.calHeading.textContent = new Date(calYear, calMonth)
+            .toLocaleDateString(undefined, { month: "long", year: "numeric" });
         el.calGrid.innerHTML = "";
 
         // Day-of-week headers
         DAYS.forEach(d => {
             const hdr = document.createElement("div");
-            hdr.className = "cal-day-header";
+            hdr.className   = "cal-day-header";
             hdr.textContent = d;
             el.calGrid.appendChild(hdr);
         });
 
-        // Empty cells before first day
+        // Leading empty cells
         for (let i = 0; i < firstDay; i++) {
             const blank = document.createElement("div");
             blank.className = "cal-cell cal-cell--empty";
@@ -502,36 +549,37 @@ const App = (() => {
         // Day cells
         for (let day = 1; day <= daysInMonth; day++) {
             const dateStr = `${calYear}-${String(calMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-            const todos = TodoModel.getTodosForDate(state, dateStr);
-            const cell = document.createElement("div");
+            const todos   = TodoModel.getTodosForDate(state, dateStr);
+            const cell    = document.createElement("div");
             cell.className = "cal-cell";
-            cell.setAttribute("role", "gridcell");
-            cell.setAttribute("tabindex", "0");
+            cell.setAttribute("role",       "gridcell");
+            cell.setAttribute("tabindex",   "0");
             cell.setAttribute("aria-label", `${dateStr}, ${todos.length} todo${todos.length !== 1 ? "s" : ""}`);
             if (dateStr === today) cell.classList.add("cal-cell--today");
 
-            const num = document.createElement("span");
+            const num     = document.createElement("span");
             num.className = "cal-day-num";
             num.textContent = day;
             cell.appendChild(num);
 
-            // Show up to 3 todo dots/chips
-            const visible = todos.slice(0, 3);
-            visible.forEach(t => {
+            todos.slice(0, 3).forEach(t => {
                 const chip = document.createElement("span");
-                chip.className = `cal-chip cal-chip--${t.priority}${t.completed ? " cal-chip--done" : ""}`;
+                chip.className  = `cal-chip cal-chip--${t.priority}${t.completed ? " cal-chip--done" : ""}`;
                 chip.textContent = t.title;
                 cell.appendChild(chip);
             });
+
             if (todos.length > 3) {
                 const more = document.createElement("span");
-                more.className = "cal-more";
+                more.className  = "cal-more";
                 more.textContent = `+${todos.length - 3} more`;
                 cell.appendChild(more);
             }
 
             cell.addEventListener("click", () => openDayModal(dateStr));
-            cell.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDayModal(dateStr); } });
+            cell.addEventListener("keydown", e => {
+                if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openDayModal(dateStr); }
+            });
             el.calGrid.appendChild(cell);
         }
     }
@@ -540,16 +588,13 @@ const App = (() => {
 
     function renderList() {
         el.sortMode.value = state.sortMode;
-
-        // Sync filter buttons
         el.filterBtns.forEach(b => b.classList.toggle("active", b.dataset.filter === state.filterMode));
 
-        // Tag filter bar
         renderTagBar();
 
         let todos = TodoModel.filterTodos(state.todos, state.filterMode, state.searchQuery);
-        todos = TodoModel.filterByTag(todos, activeTag);
-        todos = TodoModel.sortTodos(todos, state.sortMode);
+        todos     = TodoModel.filterByTag(todos, activeTag);
+        todos     = TodoModel.sortTodos(todos, state.sortMode);
 
         el.emptyState.classList.toggle("is-hidden", todos.length > 0);
         el.todoList.innerHTML = "";
@@ -562,14 +607,14 @@ const App = (() => {
         if (tags.length === 0) return;
 
         const allBtn = document.createElement("button");
-        allBtn.className = `tag-chip${activeTag === null ? " active" : ""}`;
+        allBtn.className   = `tag-chip${activeTag === null ? " active" : ""}`;
         allBtn.textContent = "All tags";
         allBtn.addEventListener("click", () => { activeTag = null; renderList(); });
         el.tagFilterBar.appendChild(allBtn);
 
         tags.forEach(tag => {
             const btn = document.createElement("button");
-            btn.className = `tag-chip${activeTag === tag ? " active" : ""}`;
+            btn.className   = `tag-chip${activeTag === tag ? " active" : ""}`;
             btn.textContent = tag;
             btn.addEventListener("click", () => { activeTag = activeTag === tag ? null : tag; renderList(); });
             el.tagFilterBar.appendChild(btn);
@@ -578,11 +623,12 @@ const App = (() => {
 
     function createTodoCard(todo) {
         const overdue = TodoModel.isOverdue(todo);
-        const li = document.createElement("li");
-        li.className = `todo-card${todo.completed ? " todo-card--done" : ""}${overdue ? " todo-card--overdue" : ""}`;
+        const li      = document.createElement("li");
+        li.className  = `todo-card${todo.completed ? " todo-card--done" : ""}${overdue ? " todo-card--overdue" : ""}`;
 
         li.innerHTML = `
-            <button class="todo-toggle icon-btn" data-action="toggle" data-id="${todo.id}" aria-label="${todo.completed ? "Mark incomplete" : "Mark complete"}">
+            <button class="icon-btn todo-toggle" data-action="toggle" data-id="${todo.id}"
+                aria-label="${todo.completed ? "Mark incomplete" : "Mark complete"}">
                 <span class="mdi ${todo.completed ? "mdi-check-circle" : "mdi-circle-outline"}" aria-hidden="true"></span>
             </button>
             <div class="todo-body">
@@ -592,16 +638,22 @@ const App = (() => {
                 </div>
                 ${todo.description ? `<p class="todo-desc">${escHtml(todo.description)}</p>` : ""}
                 <div class="todo-meta">
-                    ${todo.dueDate ? `<span class="todo-date${overdue ? " todo-date--overdue" : ""}"><span class="mdi mdi-calendar-outline" aria-hidden="true"></span>${formatDate(todo.dueDate)}</span>` : ""}
-                    ${todo.repeat !== "none" ? `<span class="todo-repeat"><span class="mdi mdi-repeat" aria-hidden="true"></span>${capitalize(todo.repeat)}</span>` : ""}
+                    ${todo.dueDate ? `<span class="todo-date${overdue ? " todo-date--overdue" : ""}">
+                        <span class="mdi mdi-calendar-outline" aria-hidden="true"></span>${formatDate(todo.dueDate)}
+                    </span>` : ""}
+                    ${todo.repeat !== "none" ? `<span class="todo-repeat">
+                        <span class="mdi mdi-repeat" aria-hidden="true"></span>${capitalize(todo.repeat)}
+                    </span>` : ""}
                     ${todo.tags.map(tag => `<span class="tag-pill">${escHtml(tag)}</span>`).join("")}
                 </div>
             </div>
             <div class="todo-actions">
-                <button class="icon-btn todo-edit-btn" data-action="edit" data-id="${todo.id}" aria-label="Edit ${escHtml(todo.title)}">
+                <button class="icon-btn todo-edit-btn" data-action="edit" data-id="${todo.id}"
+                    aria-label="Edit ${escAttr(todo.title)}">
                     <span class="mdi mdi-pencil-outline" aria-hidden="true"></span>
                 </button>
-                <button class="icon-btn todo-delete-btn" data-action="delete" data-id="${todo.id}" aria-label="Delete ${escHtml(todo.title)}">
+                <button class="icon-btn todo-delete-btn" data-action="delete" data-id="${todo.id}"
+                    aria-label="Delete ${escAttr(todo.title)}">
                     <span class="mdi mdi-trash-can-outline" aria-hidden="true"></span>
                 </button>
             </div>`;
@@ -613,24 +665,30 @@ const App = (() => {
     function renderDayList(dateString) {
         const todos = TodoModel.getTodosForDate(state, dateString);
         el.dayTodoList.innerHTML = "";
+
         if (todos.length === 0) {
-            el.dayTodoList.innerHTML = `<li class="day-empty">No todos for this day.</li>`;
+            const li = document.createElement("li");
+            li.className   = "day-empty";
+            li.textContent = "No todos for this day.";
+            el.dayTodoList.appendChild(li);
             return;
         }
+
         todos.forEach(todo => {
-            const li = document.createElement("li");
-            li.className = `day-todo-item${todo.completed ? " day-todo-item--done" : ""}`;
-            li.innerHTML = `
-                <button class="icon-btn" data-action="toggle" data-id="${todo.id}" aria-label="${todo.completed ? "Mark incomplete" : "Mark complete"}">
+            const li      = document.createElement("li");
+            li.className  = `day-todo-item${todo.completed ? " day-todo-item--done" : ""}`;
+            li.innerHTML  = `
+                <button class="icon-btn" data-action="toggle" data-id="${todo.id}"
+                    aria-label="${todo.completed ? "Mark incomplete" : "Mark complete"}">
                     <span class="mdi ${todo.completed ? "mdi-check-circle" : "mdi-circle-outline"}" aria-hidden="true"></span>
                 </button>
                 <span class="day-todo-title">${escHtml(todo.title)}</span>
                 <span class="priority-badge priority-badge--${todo.priority}">${capitalize(todo.priority)}</span>
                 <div class="day-todo-actions">
-                    <button class="icon-btn" data-action="edit" data-id="${todo.id}" aria-label="Edit">
+                    <button class="icon-btn" data-action="edit"   data-id="${todo.id}" aria-label="Edit ${escAttr(todo.title)}">
                         <span class="mdi mdi-pencil-outline" aria-hidden="true"></span>
                     </button>
-                    <button class="icon-btn" data-action="delete" data-id="${todo.id}" aria-label="Delete">
+                    <button class="icon-btn" data-action="delete" data-id="${todo.id}" aria-label="Delete ${escAttr(todo.title)}">
                         <span class="mdi mdi-trash-can-outline" aria-hidden="true"></span>
                     </button>
                 </div>`;
@@ -645,12 +703,23 @@ const App = (() => {
         return isNaN(d) ? dateString : d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
     }
 
-    function capitalize(s) {
-        return s.charAt(0).toUpperCase() + s.slice(1);
+    function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+    // For HTML text content — escapes <, >, &, "
+    function escHtml(s) {
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
     }
 
-    function escHtml(s) {
-        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    // For HTML attribute values — avoids &quot; showing as literal text in aria-labels
+    function escAttr(s) {
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/"/g, "&#34;")
+            .replace(/'/g, "&#39;");
     }
 
     return { init };
